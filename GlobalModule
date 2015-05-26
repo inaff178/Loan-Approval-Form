@@ -1,0 +1,50 @@
+Option Explicit On
+Option Strict On
+
+Module GlobalModule
+
+    Public Function Recommendation(ByVal propertyValue As Double, ByVal clientIncome As Double, ByVal loanAmount As Double, ByVal termInMonths As Integer, ByVal annualInterestRate As Double) As String
+
+        Dim monthlyPayment As Double
+        Dim paymentApproval, loanApproval, approvalStatus As String
+
+        Try
+
+            monthlyPayment = -Pmt((annualInterestRate / 12), termInMonths, loanAmount)
+
+            If monthlyPayment > (0.25 * (clientIncome / 12)) Then
+                paymentApproval = "Max payment/mo for client: " & (0.25 * (clientIncome / 12)).ToString("C2") & ". "
+
+            Else
+                paymentApproval = ""
+
+            End If
+
+            If loanAmount > (0.8 * propertyValue) Then
+                loanApproval = "Max loan on property: " & (0.8 * propertyValue).ToString("C2") & "."
+
+            Else
+                loanApproval = ""
+
+            End If
+
+            If monthlyPayment <= (0.25 * (clientIncome / 12)) And loanAmount <= (0.8 * propertyValue) Then
+                approvalStatus = "Approved."
+
+            Else
+                approvalStatus = "Not approved. "
+
+            End If
+
+        Catch ex As Exception
+            Return "Not approved." & ex.Message
+
+        End Try
+
+        approvalStatus = approvalStatus & paymentApproval & loanApproval
+
+        Return approvalStatus
+
+    End Function
+
+End Module
