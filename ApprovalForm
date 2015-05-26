@@ -1,0 +1,83 @@
+Option Explicit On
+Option Strict Off
+
+Public Class LoanForm
+
+    Private Sub TblApplicationBindingNavigatorSaveItem_Click(sender As Object, e As EventArgs) Handles TblApplicationBindingNavigatorSaveItem.Click
+        Me.Validate()
+        Me.TblApplicationBindingSource.EndEdit()
+        Me.TableAdapterManager.UpdateAll(Me.LoanApplicationDataSet)
+
+    End Sub
+
+    Private Sub LoanForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Dim counter As Integer
+        Dim format As String = "{0,0}{1,25}{2,95}"
+
+        Me.TblApplicationTableAdapter.Fill(Me.LoanApplicationDataSet.tblApplication)
+
+        For counter = 120 To 360 Step 60
+            selectLoanTermComboBox.Items.Add(counter.ToString)
+        Next
+
+        selectLoanTermComboBox.Items.Add("All")
+
+        selectLoanTermComboBox.SelectedIndex = -1
+
+        loanReccomendationLabel.Text = String.Format(format, "Appln" & vbNewLine & "ID", "Client", "Approval Status")
+
+    End Sub
+
+    Private Sub selectLoanTermComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles selectLoanTermComboBox.SelectedIndexChanged
+
+        Dim propertyValue, loanAmount, annualInterestRate, clientIncome As Double
+        Dim termInMonths As Integer
+        Dim applicationID, clientName, recommend As String
+        Dim format As String = "{0,0}{1,25}{2,95}"
+        Dim tblApplication As DataGridView = TblApplicationDataGridView
+
+        resultsTextBox.Clear()
+
+        Try
+
+            resultsTextBox.Text = vbNewLine
+
+            For Each row In LoanApplicationDataSet.tblApplication.Rows
+
+                applicationID = Convert.ToString(row.Item("ApplicationID").ToString)
+                clientName = Convert.ToString(row.Item("ClientName").ToString)
+                propertyValue = Convert.ToDouble(row.Item("PropertyValue").ToString)
+                loanAmount = Convert.ToDouble(row.Item("LoanAmount").ToString)
+                annualInterestRate = Convert.ToDouble(row.Item("AnnualInterestRate").ToString)
+                clientIncome = Convert.ToDouble(row.Item("ClientIncome").ToString)
+                termInMonths = Convert.ToInt32(row.Item("TermInMonths").ToString)
+
+                If Convert.ToString(selectLoanTermComboBox.SelectedItem) = Convert.ToString(termInMonths) Then
+                    recommend = Recommendation(propertyValue, clientIncome, loanAmount, termInMonths, annualInterestRate)
+                    resultsTextBox.AppendText(String.Format(format, applicationID, clientName, recommend & vbNewLine))
+
+                ElseIf Convert.ToString(selectLoanTermComboBox.SelectedItem) = Convert.ToString("All") Then
+                    recommend = Recommendation(propertyValue, clientIncome, loanAmount, termInMonths, annualInterestRate)
+                    resultsTextBox.AppendText(String.Format(format, applicationID, clientName, recommend & vbNewLine))
+
+                End If
+
+            Next
+
+            resultsTextBox.SelectionStart = 0
+            resultsTextBox.ScrollToCaret()
+
+        Catch fe As FormatException
+            MessageBox.Show(fe.Message)
+            Exit Sub
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Unexpected error")
+            Exit Sub
+
+        End Try
+
+    End Sub
+
+End Class
